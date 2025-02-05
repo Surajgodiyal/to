@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Four</title>
+    <style>
+        body {
+            background-color: #000;
+            font-family: Arial, sans-serif;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #61dafb;
+        }
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(7, 70px);
+            grid-template-rows: repeat(6, 70px);
+            gap: 5px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .cell {
+            width: 70px;
+            height: 70px;
+            background-color: #1e1e1e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .player1 {
+            background-color: red;
+        }
+        .player2 {
+            background-color: yellow;
+        }
+        .message {
+            margin-top: 20px;
+            font-size: 1.5em;
+        }
+        .reset {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #61dafb;
+            border: none;
+            border-radius: 5px;
+        }
+        .reset:hover {
+            background-color: #4fa3d1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Connect Four</h1>
+    <p id="turnMessage">Player 1's turn (Red)</p>
+    <div class="game-board" id="board"></div>
+    <button class="reset" onclick="resetGame()">Reset Game</button>
+
+    <script>
+        const rows = 6;
+        const cols = 7;
+        const board = document.getElementById('board');
+        let currentPlayer = 'player1'; // Player 1 starts (Red)
+        let gameBoard = Array.from({ length: rows }, () => Array(cols).fill(null));
+
+        // Create game board
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                cell.onclick = handleCellClick;
+                board.appendChild(cell);
+            }
+        }
+
+        // Handle cell click
+        function handleCellClick(event) {
+            const col = event.target.dataset.col;
+            const row = getAvailableRow(col);
+            if (row === null) return; // Column is full
+
+            // Place disc in the available row
+            const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+            cell.classList.add(currentPlayer);
+
+            // Update game board array
+            gameBoard[row][col] = currentPlayer;
+
+            // Check for a win
+            if (checkWin(row, col)) {
+                document.getElementById('turnMessage').textContent = `${currentPlayer === 'player1' ? 'Player 1' : 'Player 2'} Wins!`;
+                disableBoard();
+                return;
+            }
+
+            // Change turn
+            currentPlayer = currentPlayer === 'player1' ? 'player2' : 'player1';
+            document.getElementById('turnMessage').textContent = `${currentPlayer === 'player1' ? 'Player 1' : 'Player 2'}'s turn (${currentPlayer === 'player1' ? 'Red' : 'Yellow'})`;
+        }
+
+        // Get the available row in the selected column
+        function getAvailableRow(col) {
+            for (let row = rows - 1; row >= 0; row--) {
+                if (gameBoard[row][col] === null) {
+                    return row;
+                }
+            }
+            return null;
+        }
+
+        // Check for a win after each move
+        function checkWin(row, col) {
+            const directions = [
+                { r: 0, c: 1 },  // Horizontal
+                { r: 1, c: 0 },  // Vertical
+                { r: 1, c: 1 },  // Diagonal /
+                { r: 1, c: -1 }  // Diagonal \
+            ];
+
+            for (let dir of directions) {
+                let count = 1;
+                count += countInDirection(row, col, dir.r, dir.c);
+                count += countInDirection(row, col, -dir.r, -dir.c);
+
+                if (count >= 4) return true;
+            }
+            return false;
+        }
+
+        // Count discs in a direction
+        function countInDirection(row, col, rStep, cStep) {
+            let count = 0;
+            let currentRow = row + rStep;
+            let currentCol = col + cStep;
+
+            while (currentRow >= 0 && currentRow < rows && currentCol >= 0 && currentCol < cols &&
+                gameBoard[currentRow][currentCol] === currentPlayer) {
+                count++;
+                currentRow += rStep;
+                currentCol += cStep;
+            }
+
+            return count;
+        }
+
+        // Disable the board after a win
+        function disableBoard() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => cell.onclick = null);
+        }
+
+        // Reset the game
+        function resetGame() {
+            gameBoard = Array.from({ length: rows }, () => Array(cols).fill(null));
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.classList.remove('player1', 'player2');
+                cell.onclick = handleCellClick;
+            });
+            currentPlayer = 'player1';
+            document.getElementById('turnMessage').textContent = "Player 1's turn (Red)";
+        }
+    </script>
+</body>
+</html>
+
