@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game</title>
+    <style>
+        body {
+            background-color: #000;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            border: 2px solid white;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="pong" width="800" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('pong');
+        const ctx = canvas.getContext('2d');
+
+        // Game settings
+        const paddleWidth = 10, paddleHeight = 100;
+        const ballSize = 10;
+
+        // Paddle positions
+        let leftPaddleY = (canvas.height - paddleHeight) / 2;
+        let rightPaddleY = (canvas.height - paddleHeight) / 2;
+
+        // Ball position and speed
+        let ballX = canvas.width / 2;
+        let ballY = canvas.height / 2;
+        let ballSpeedX = 5;
+        let ballSpeedY = 5;
+
+        // Player controls
+        const leftPaddleSpeed = 30;
+        const rightPaddleSpeed = 30;
+
+        // Draw the paddles and ball
+        function draw() {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw paddles
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, leftPaddleY, paddleWidth, paddleHeight); // Left paddle
+            ctx.fillRect(canvas.width - paddleWidth, rightPaddleY, paddleWidth, paddleHeight); // Right paddle
+
+            // Draw the ball
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballSize, 0, Math.PI * 2, false);
+            ctx.fill();
+        }
+
+        // Move the ball and handle collisions
+        function moveBall() {
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Ball bounce from top or bottom
+            if (ballY + ballSize > canvas.height || ballY - ballSize < 0) {
+                ballSpeedY = -ballSpeedY;
+            }
+
+            // Ball collision with paddles
+            if (ballX - ballSize < paddleWidth && ballY > leftPaddleY && ballY < leftPaddleY + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+            }
+            if (ballX + ballSize > canvas.width - paddleWidth && ballY > rightPaddleY && ballY < rightPaddleY + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+            }
+
+            // Ball out of bounds (score point)
+            if (ballX - ballSize < 0 || ballX + ballSize > canvas.width) {
+                resetBall();
+            }
+        }
+
+        // Reset ball to center after score
+        function resetBall() {
+            ballX = canvas.width / 2;
+            ballY = canvas.height / 2;
+            ballSpeedX = -ballSpeedX;
+            ballSpeedY = 5;
+        }
+
+        // Move paddles
+        function movePaddles() {
+            if (leftUp && leftPaddleY > 0) leftPaddleY -= leftPaddleSpeed;
+            if (leftDown && leftPaddleY + paddleHeight < canvas.height) leftPaddleY += leftPaddleSpeed;
+            if (rightUp && rightPaddleY > 0) rightPaddleY -= rightPaddleSpeed;
+            if (rightDown && rightPaddleY + paddleHeight < canvas.height) rightPaddleY += rightPaddleSpeed;
+        }
+
+        // Key press event handling for paddles
+        let leftUp = false, leftDown = false, rightUp = false, rightDown = false;
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'w') leftUp = true;
+            if (e.key === 's') leftDown = true;
+            if (e.key === 'ArrowUp') rightUp = true;
+            if (e.key === 'ArrowDown') rightDown = true;
+        });
+        document.addEventListener('keyup', function(e) {
+            if (e.key === 'w') leftUp = false;
+            if (e.key === 's') leftDown = false;
+            if (e.key === 'ArrowUp') rightUp = false;
+            if (e.key === 'ArrowDown') rightDown = false;
+        });
+
+        // Main game loop
+        function gameLoop() {
+            draw();
+            moveBall();
+            movePaddles();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game loop
+        gameLoop();
+    </script>
+</body>
+</html>
